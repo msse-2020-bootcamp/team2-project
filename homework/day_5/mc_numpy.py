@@ -121,3 +121,35 @@ def calculate_pair_energy_np(coordinates, i_particle, box_length, cutoff):
     e_total = e_array.sum()
     
     return e_total
+
+def calculate_total_energy_np(coords, box_length, cutoff):
+    """
+    Calculates the total interaction energy existing among a set of coordinates.
+    
+    Parameters
+    ----------
+    coords : np.ndarray
+        Nested array of coordinates [x,y,z]
+    cutoff : float
+        The cutoff distance for the system
+        
+    Returns
+    -------
+    total_energy : float
+        The total interaction energy calculated from LJ potential.
+    """
+    
+    
+    total_energy = 0
+    for i in range(coords.shape[0]):
+        arr1 = coords[i]
+        arr2 = coords[i+1:] 
+        dist = calculate_distance_np(arr1, arr2, box_length)
+        
+    
+        energy_array = dist[dist < cutoff]
+        total_array = calculate_LJ_np(energy_array)
+    
+        total_energy += total_array.sum()
+    
+    return total_energy
