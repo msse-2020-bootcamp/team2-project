@@ -235,14 +235,14 @@ def rdf(values, n_bins, max_value, num_particles, box_length):
     
     return bin_centers, rdf
 
-def run_sim(reduced_temperature, reduced_density, num_steps=50000,
-            max_displacement=0.1, cutoff=3, num_rdfs = 5, num_particles = 500, freq=5000):
+def run_sim(reduced_temperature, reduced_density, num_steps=1000000,
+            max_displacement=0.1, cutoff=3, num_particles = 500, freq=100):
     # set simulation parameters
-    rdf_list = []
+    rdf_lst = []
 
     # reporting information
-    steps = []
-    energies = []
+    steps = np.zeros((math.floor(num_steps/freq), 1))
+    energies = np.zeros((math.floor(num_steps/freq), 1))
 
     # calculated quantities
     beta = 1 / reduced_temperature
@@ -286,22 +286,19 @@ def run_sim(reduced_temperature, reduced_density, num_steps=50000,
         
         # 8. print energy at certain intervals
         if step % freq == 0:
-            steps.append(step)
-            energies.append(total_energy/num_particles)
+            steps[math.floor(step/freq)][0] = step
+            energies[math.floor(step/freq)][0] = total_energy/num_particles
 
-        if num_steps - step < num_rdfs:
+        if num_steps - step <= 1000 and (num_steps - step) % 100 == 0:
             values = []
             for i in range(num_particles):
                 for j in range(num_particles):
-                    values.append(calculate_distance(coordinates[i], coordinates[j], box_length))
-            bins, rdf = rdf(values, box_length/2, 0.1, num_particles, box_length)
-            rdf_lst.append(rdf)
+                    if i != j:
+                        values.append(calculate_distance_np(coordinates[i], coordinates[j], box_length))
+            bins, rdfs = rdf(np.array(values), 100, box_length/2, num_particles, box_length)
+            rdf_lst.append(rdfs)
 
-    averaged_rdfs = []
-    for i in range(len(rdfs[0])):
-        tot = 0
-        for j in range (len(rdfs_lst)):
-            tot += rdfs_lst[j][i]
-        averaged_rdfs = tot/num_rdfs
+    rdf_lst = np.array(rdf_lst)
+    averaged_rdfs = np.mean(rdf_lst, axis=0)
     
     return steps, energies, bins, averaged_rdfs
